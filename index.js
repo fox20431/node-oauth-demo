@@ -1,28 +1,28 @@
 // Fill in your client ID and client secret that you obtained
 // while registering the application
-const clientID = '7e015d8ce32370079895'
-const clientSecret = '2b976af0e6b6ceea2b1554aa31d1fe94ea692cd9'
+const clientID = 'eb4e66a3cf4256fc45d1';
+const clientSecret = '5e65ebcbf381a7161aab657e861798c172164c60';
 
-const Koa = require('koa');
+const express = require('express');
 const path = require('path');
-const serve = require('koa-static');
-const route = require('koa-route');
 const axios = require('axios');
+const https = require('https')
 
-const app = new Koa();
+const app = express();
 
-const main = serve(path.join(__dirname + '/public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
-const oauth = async ctx => {
-  const requestToken = ctx.request.query.code;
-  console.log('authorization code:', requestToken);
+app.get('/oauth/redirect', async (req, res) => {
+  const authorizationCode = req.query.code;
+  console.log('authorization code:', authorizationCode);
 
   const tokenResponse = await axios({
     method: 'post',
     url: 'https://github.com/login/oauth/access_token?' +
       `client_id=${clientID}&` +
       `client_secret=${clientSecret}&` +
-      `code=${requestToken}`,
+      `code=${authorizationCode}&` +
+      `redirect_uri=http://localhost:8080/oauth/redirect`,
     headers: {
       accept: 'application/json'
     }
@@ -42,10 +42,9 @@ const oauth = async ctx => {
   console.log(result.data);
   const name = result.data.name;
 
-  ctx.response.redirect(`/welcome.html?name=${name}`);
-};
+  res.redirect(`/welcome.html?name=${name}`);
+});
 
-app.use(main);
-app.use(route.get('/oauth/redirect', oauth));
-
-app.listen(8080);
+const server = app.listen(8080, () => {
+  console.log(`Express server listening on port ${server.address().port}`);
+});
